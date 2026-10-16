@@ -1,0 +1,47 @@
+{
+  "release": "amap-2026-10-10",
+  "captured_at": "2026-10-16T19:13:57.262383+00:00",
+  "note": "Release label chosen by the user as October 10. Captured from local checkouts on the capture date; commit dates are preserved below. No remotes were contacted.",
+  "repositories": [
+    {
+      "name": "amap-connector-claude",
+      "path": "amap-connector-claude",
+      "remote_url": "https://github.com/proofpoint/amap-connector-claude.git",
+      "commit": "3a20c28080ad560a55e202ea59596c1ae1733661",
+      "commit_date": "2026-10-06T22:21:33-06:00",
+      "commit_subject": "read_message shows the runtime's provenance label",
+      "tag": "amap-2026-10-10",
+      "tag_object": "46bfd194502bdcfcfa0506ce590f7a21be1a8fdb"
+    },
+    {
+      "name": "amap-connector-codex",
+      "path": "amap-connector-codex",
+      "remote_url": "https://github.com/proofpoint/amap-connector-codex",
+      "commit": "87347ad49837563678f50c4119248ecd2dda048d",
+      "commit_date": "2026-10-07T20:23:32-06:00",
+      "commit_subject": "Docs: the connector names no deployment adapter",
+      "tag": "amap-2026-10-10",
+      "tag_object": "50090cffe38c7c8284300a7fe6c02d5fe79e0aae"
+    },
+    {
+      "name": "amap-deploy-sandy",
+      "path": "amap-deploy-sandy",
+      "remote_url": "https://github.com/proofpoint/amap-deploy-sandy.git",
+      "commit": "ef93e4f179ebe13470e11e982fdf465f709f0530",
+      "commit_date": "2026-10-10T16:55:45-06:00",
+      "commit_subject": "handoff-sessions: a parked pane session is followed to its successor, or gets no row (#34)",
+      "tag": "amap-2026-10-10",
+      "tag_object": "4f5c8d4d6716d5eca223d7dcbdb75e377e86a7f9"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "972cb7096bf4110811cbafc20a6a8019d7408576",
+      "commit_date": "2026-10-06T22:09:51-06:00",
+      "commit_subject": "Configure explicit connector outcome directories (#1)",
+      "tag": "amap-2026-10-10",
+      "tag_object": "9f650cd760de3ee15b5ffc0bd7254d943ca09150"
+    }
+  ]
+}

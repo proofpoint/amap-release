@@ -1,0 +1,3 @@
+# Offline backup artifacts are stored separately.
+*.bundle
+*-backup.tar.gz
