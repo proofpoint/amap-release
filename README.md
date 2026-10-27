@@ -46,9 +46,9 @@ manifest, checksums, and `RESTORE.txt`. The archive was verified by restoring
 all four repositories and checking their release commits, tag objects, and
 Git object integrity.
 
-The archive is stored separately from this repository. A copy was transferred
-to `nas:/volume1/DanWorkSpareSpace/`. This repository tracks its SHA-256 checksum.
-After obtaining the archive, place it and the checksum file in one directory:
+The archive is stored separately from this repository (backup to your own storage). 
+This repository tracks its SHA-256 checksum. After obtaining the archive, place it and 
+the checksum file in one directory:
 
 ```bash
 sha256sum -c amap-2026-10-10-backup.tar.gz.sha256
