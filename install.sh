@@ -12,6 +12,13 @@
 # the router. Agents are started afterwards, whenever and in any order, with
 # `sandy --start`.
 #
+# Codex conversations default to unified mode: newly created Codex-served
+# sandboxes use one persistent conversation for the pane and incoming work.
+# The default is applied only where it changes no existing sandbox: the
+# release supports it, the host has not chosen a mode, sandy accepts the
+# Codex agent_wrapper, and sandy reports no sandbox launched with codex.
+# Otherwise the host's current mode is kept and the installer says why.
+#
 # Unlike amap-deploy-sandy's install.sh, which follows that repository's main
 # branch, this installs exactly the commits a release records. The checkouts
 # are left detached at the release tag.
@@ -30,11 +37,11 @@
 #   AMAP_DIR        where the checkouts go    (default: ~/amap)
 #   SANDY_HOME      sandy's home              (default: ~/.sandy)
 #   AMAP_CODEX=1    also check out amap-connector-codex, so Codex sandboxes
-#                   get a delivery supervisor
+#                   get a delivery supervisor (implied by unified mode)
 #   AMAP_CODEX_MODE=unified|separate
-#                   author the fleet's Codex conversation mode (implies
-#                   AMAP_CODEX=1). Unified applies to newly created Codex-served
-#                   sandboxes only; unset keeps the host's current mode
+#                   author the fleet's Codex conversation mode, overriding the
+#                   default above. Unified applies to newly created Codex-served
+#                   sandboxes only; existing ones hold for the operator
 #   AMAP_FLEET_DOMAIN_BASE  a fresh host's fleet domain is sandy.<host>.<this>
 #                   (default: internal, non-routable)
 #   AMAP_RELEASE_RAW  where release manifests are read from
@@ -55,13 +62,76 @@ say() { printf '[amap] %s\n' "$*"; }
 die() { printf '[amap] error: %s\n' "$*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "$1 is not on PATH. $2"; }
 
+# checkout NAME URL COMMIT TAG TAG_OBJECT: $AMAP_DIR/NAME, detached at TAG,
+# whose commit must be COMMIT.
+checkout() {
+  local name=$1 url=$2 commit=$3 tag=$4 tag_object=$5
+  local dest="$AMAP_DIR/$name" cloned=0
+  if [ -d "$dest/.git" ]; then
+    [ -z "$(git -C "$dest" status --porcelain --untracked-files=no)" ] \
+      || die "$dest has local changes. Commit or stash them, then re-run."
+  elif [ -e "$dest" ]; then
+    die "$dest exists and is not a git checkout. Move it aside, then re-run."
+  else
+    say "cloning $name into $dest"
+    git clone --quiet --no-checkout "$url" "$dest"
+    cloned=1
+  fi
+  # A local tag of the same name that differs is refused here, not replaced.
+  git -C "$dest" fetch --quiet origin "refs/tags/$tag:refs/tags/$tag" \
+    || die "$name: tag $tag could not be fetched, or a different local $tag exists."
+  # The commit is the pin. A re-created tag on the same commit is reported.
+  [ "$(git -C "$dest" rev-parse "refs/tags/$tag^{commit}")" = "$commit" ] \
+    || die "$name: tag $tag does not point at the manifest's commit ($commit)."
+  [ "$(git -C "$dest" rev-parse "refs/tags/$tag")" = "$tag_object" ] \
+    || say "note: $name's tag $tag is not the tag object the manifest records (${tag_object:0:12}); its commit matches."
+  # A fresh --no-checkout clone has no working tree, whatever its HEAD.
+  if [ "$cloned" = 1 ] || [ "$(git -C "$dest" rev-parse -q --verify HEAD || true)" != "$commit" ]; then
+    say "checking out $name at $tag (${commit:0:12})"
+    git -C "$dest" -c advice.detachedHead=false checkout --quiet --detach "$commit"
+  fi
+}
+
+# default_codex_mode MANIFEST: prints "unified" when the default may be
+# applied, or nothing; why not goes to stderr.
+default_codex_mode() {
+  if [ -f "$1" ] && python3 -I -c '
+import json, sys
+sys.exit(0 if "codex_conversation_mode" in json.load(open(sys.argv[1])).get("feature", {}) else 1)
+' "$1" 2>/dev/null; then
+    say "this host already chose its Codex conversation mode; it was kept." >&2
+    return 0
+  fi
+  if ! sandy --print-schema 2>/dev/null | python3 -I -c '
+import json, sys
+keys = json.load(sys.stdin).get("manifest", {}).get("top_level_keys", [])
+sys.exit(0 if "agent_wrapper" in keys else 1)
+'; then
+    say "note: this sandy does not accept the Codex agent_wrapper, so Codex stays in separate mode." >&2
+    return 0
+  fi
+  local codex
+  codex=$(sandy --print-state 2>/dev/null | python3 -I -c '
+import json, sys
+names = [s.get("name", "?") for s in json.load(sys.stdin).get("sandboxes", [])
+         if "codex" in (s.get("agents") or [])]
+print(" ".join(names))
+') || { say "note: sandy --print-state could not be read, so Codex stays in its current mode." >&2; return 0; }
+  if [ -n "$codex" ]; then
+    say "note: Codex sandboxes already exist ($codex), so Codex stays in its current mode." >&2
+    say "  Unified mode would hold them until recreated. To choose it anyway, read the" >&2
+    say "  release README's operator procedure, then re-run with AMAP_CODEX_MODE=unified." >&2
+    return 0
+  fi
+  echo unified
+}
+
 main() {
   # The checkouts are the ones under $AMAP_DIR: an override pointing elsewhere
   # would install and build from a tree this script did not put at the release.
   unset AMAP_ROUTER_REPO AMAP_CONNECTOR_REPO AMAP_CODEX_CONNECTOR_REPO
   case "${AMAP_CODEX_MODE:-}" in
-    "") ;;
-    unified|separate) AMAP_CODEX=1 ;;
+    ""|unified|separate) ;;
     *) die "AMAP_CODEX_MODE must be unified or separate (got: $AMAP_CODEX_MODE)." ;;
   esac
   case "$AMAP_RELEASE" in
@@ -107,34 +177,14 @@ for r in m["repositories"]:
 ') || die "the manifest for $AMAP_RELEASE could not be read."
 
   # --- the checkouts, side by side, at the release tag -------------------------
+  # The Codex connector is checked out once the conversation mode is known.
   mkdir -p "$AMAP_DIR"
-  local name url commit tag tag_object dest
+  local name url commit tag tag_object codex_row=""
   while read -r -u 3 name url commit tag tag_object; do
-    if [ "$name" = "$CODEX_REPO" ] && [ "${AMAP_CODEX:-}" != "1" ]; then
-      say "skipping $name (set AMAP_CODEX=1 to include it)"
-      continue
-    fi
-    dest="$AMAP_DIR/$name"
-    if [ -d "$dest/.git" ]; then
-      [ -z "$(git -C "$dest" status --porcelain --untracked-files=no)" ] \
-        || die "$dest has local changes. Commit or stash them, then re-run."
-    elif [ -e "$dest" ]; then
-      die "$dest exists and is not a git checkout. Move it aside, then re-run."
+    if [ "$name" = "$CODEX_REPO" ]; then
+      codex_row="$name $url $commit $tag $tag_object"
     else
-      say "cloning $name into $dest"
-      git clone --quiet --no-checkout "$url" "$dest"
-    fi
-    # A local tag of the same name that differs is refused here, not replaced.
-    git -C "$dest" fetch --quiet origin "refs/tags/$tag:refs/tags/$tag" \
-      || die "$name: tag $tag could not be fetched, or a different local $tag exists."
-    # The commit is the pin. A re-created tag on the same commit is reported.
-    [ "$(git -C "$dest" rev-parse "refs/tags/$tag^{commit}")" = "$commit" ] \
-      || die "$name: tag $tag does not point at the manifest's commit ($commit)."
-    [ "$(git -C "$dest" rev-parse "refs/tags/$tag")" = "$tag_object" ] \
-      || say "note: $name's tag $tag is not the tag object the manifest records (${tag_object:0:12}); its commit matches."
-    if [ "$(git -C "$dest" rev-parse -q --verify HEAD || true)" != "$commit" ]; then
-      say "checking out $name at $tag (${commit:0:12})"
-      git -C "$dest" -c advice.detachedHead=false checkout --quiet --detach "$commit"
+      checkout "$name" "$url" "$commit" "$tag" "$tag_object"
     fi
   done 3<<<"$rows"
 
@@ -164,10 +214,23 @@ sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if b
          say "  To move it, see amap-deploy-sandy's install.sh (AMAP_MOVE_FLEET_DOMAIN=1)." ;;
     esac
   fi
-  if [ -n "${AMAP_CODEX_MODE:-}" ]; then
-    python3 "$amap_sandy" install --help | grep -q -- --codex-mode \
-      || die "release $AMAP_RELEASE does not support AMAP_CODEX_MODE; unset it or choose a later release."
-    install_args+=(--codex-mode "$AMAP_CODEX_MODE")
+  local codex_mode="${AMAP_CODEX_MODE:-}"
+  if python3 "$amap_sandy" install --help | grep -q -- --codex-mode; then
+    [ -n "$codex_mode" ] || codex_mode=$(default_codex_mode "$SANDY_HOME/features/amap/feature.json")
+  elif [ -n "$codex_mode" ]; then
+    die "release $AMAP_RELEASE does not support AMAP_CODEX_MODE; unset it or choose a later release."
+  fi
+  if [ -n "$codex_mode" ]; then
+    say "Codex conversation mode: $codex_mode"
+    install_args+=(--codex-mode "$codex_mode")
+    AMAP_CODEX=1
+  fi
+  if [ "${AMAP_CODEX:-}" = "1" ]; then
+    [ -n "$codex_row" ] || die "release $AMAP_RELEASE has no $CODEX_REPO."
+    # shellcheck disable=SC2086  # five space-free fields
+    checkout $codex_row
+  elif [ -n "$codex_row" ]; then
+    say "skipping $CODEX_REPO (set AMAP_CODEX=1 to include it)"
   fi
 
   # --- the manifest, the payload, the router's config and its directories -----
@@ -210,7 +273,7 @@ sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if b
 [amap] Check everything:  python3 $amap_sandy verify
 [amap] The checkouts under $AMAP_DIR are detached at $AMAP_RELEASE.
 EOF
-  if [ "${AMAP_CODEX_MODE:-}" = "unified" ]; then
+  if [ "$codex_mode" = "unified" ]; then
     cat <<EOF
 [amap] Unified Codex conversations apply to NEWLY CREATED Codex-served sandboxes.
 [amap] Existing Codex sandboxes keep their state and hold; see the release

@@ -27,6 +27,14 @@ records and leaves the checkouts detached at the release tag. It's safe to run
 again. A checkout with local changes stops the install, and an existing host's
 fleet domain and Codex conversation mode are kept.
 
+Codex conversations default to [unified mode](#codex-unified-conversations).
+The installer checks out the Codex connector and passes
+`install --codex-mode unified`, but only when doing so changes no existing
+sandbox. The release must support it, the host must not have chosen a mode
+already, sandy must accept the Codex `agent_wrapper`, and sandy must report no
+sandbox launched with Codex. Otherwise the host keeps its current mode and the
+installer says why.
+
 Settings, passed as environment variables to `bash`:
 
 | Variable | Effect |
@@ -35,18 +43,18 @@ Settings, passed as environment variables to `bash`:
 | `AMAP_DIR` | Where the checkouts go. Defaults to `~/amap`. |
 | `SANDY_HOME` | sandy's home. Defaults to `~/.sandy`. |
 | `AMAP_CODEX=1` | Also check out amap-connector-codex, so Codex sandboxes get a delivery supervisor. |
-| `AMAP_CODEX_MODE` | `unified` or `separate`: author the fleet's Codex conversation mode. Implies `AMAP_CODEX=1`. Unset keeps the host's current mode. |
+| `AMAP_CODEX_MODE` | `unified` or `separate`: author the fleet's Codex conversation mode, overriding the default above. `unified` checks out the Codex connector. |
 | `AMAP_FLEET_DOMAIN_BASE` | A fresh host's fleet domain is `sandy.<host>.<this>`. Defaults to `internal`. |
 
-For example, to install with unified Codex conversations for newly created
-Codex sandboxes:
+For example, to keep separate Codex conversations on a fresh host:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/proofpoint/amap-release/main/install.sh | AMAP_CODEX_MODE=unified bash
+curl -fsSL https://raw.githubusercontent.com/proofpoint/amap-release/main/install.sh | AMAP_CODEX_MODE=separate bash
 ```
 
-Read [Codex unified conversations](#codex-unified-conversations) first if the
-host already runs Codex sandboxes.
+On a host that already runs Codex sandboxes, read
+[Codex unified conversations](#codex-unified-conversations) before setting
+`AMAP_CODEX_MODE=unified`.
 
 ## Releases
 
@@ -92,18 +100,19 @@ python3 amap-sandy.py install --codex-mode unified           # preview
 python3 amap-sandy.py install --codex-mode unified --apply
 ```
 
-The one-command installer does the same with `AMAP_CODEX_MODE=unified`. The
-choice sets `feature.codex_conversation_mode = "unified"` in the manifest. A
+The one-command installer passes this choice by default on a host with no Codex
+sandboxes, and with `AMAP_CODEX_MODE=unified` on any host. The choice sets `feature.codex_conversation_mode = "unified"` in the manifest. A
 later ordinary install keeps it. The host's sandy must support the protected
 Codex `agent_wrapper`, or install refuses the choice. Unified mode applies only
 to **newly created** Codex-served sandboxes launched with
 `SANDY_SKIP_PERMISSIONS=true`. Mixed Claude/Codex sandboxes are Claude-served
 and are refused by the unified wrapper.
 
-**Separate mode stays the default.** A host that doesn't choose unified mode
-keeps separate mode, with its native-config and default model behavior.
-Installing or publishing this release doesn't migrate, adopt, or erase any
-existing Codex state.
+**Separate mode stays available.** The deployment's `install` keeps separate
+mode unless `--codex-mode unified` is passed, and `AMAP_CODEX_MODE=separate`
+keeps it with the one-command installer. Separate mode keeps its native-config
+and default model behavior. Installing or publishing this release doesn't
+migrate, adopt, or erase any existing Codex state.
 
 **Existing sandboxes need an operator procedure.** An existing Codex sandbox
 with partial, ambiguous, or separate-mode state is held, not converted. To move
