@@ -12,7 +12,10 @@ and Sandy deployment that make up one AMAP release.
 
 The release date is a label. The manifest preserves the actual capture time,
 component commit dates, full commit hashes, remote URLs, and annotated tag
-object hashes. The component repositories carry matching release tags.
+object hashes. The component repositories carry matching `amap-YYYY-MM-DD`
+release tags. This repository tags each release as plain `YYYY-MM-DD` and
+publishes it as a [GitHub release](https://github.com/proofpoint/amap-release/releases),
+so release `amap-2026-10-10` is tag `2026-10-10` here.
 
 ### amap-2026-10-10
 
@@ -73,6 +76,8 @@ Git.
    checksum alongside the manifest.
 5. Add the release to this README and commit the release record. Publish the
    component tags and this repository when ready to share them.
+6. Tag the release record in this repository as `YYYY-MM-DD` (without the
+   `amap-` prefix), push the tag, and create a matching GitHub release.
 
 Keep existing release records intact. Use a new release label for a different
 combination of component commits.
