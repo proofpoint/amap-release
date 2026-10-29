@@ -1,0 +1,102 @@
+{
+  "release": "amap-m1p1-rc1",
+  "status": "release candidate, unpublished: not a validated M1P1 release",
+  "prerelease": true,
+  "based_on": "the M1 phase 1 component set; amap-deploy-sandy 8a515c10 siblings.json pins the other four exactly",
+  "captured_at": "2026-10-29T03:33:30.995897+00:00",
+  "note": "Pins and trees measured 2026-10-29 from cloned repositories; every tree matched. Component tags created 2026-10-29 with Dan's approval; amap-router-local carries two, one per pin.",
+  "acceptance": {
+    "forge": "accepted 2026-10-23 (reported, not measured here)",
+    "mac": "UNKNOWN: writer sitting scheduled 2026-10-29 05:00 MDT"
+  },
+  "repositories": [
+    {
+      "name": "amap-connector-claude",
+      "path": "amap-connector-claude",
+      "remote_url": "https://github.com/proofpoint/amap-connector-claude.git",
+      "commit": "3a20c28080ad560a55e202ea59596c1ae1733661",
+      "tree": "d26bc77a0bf94e2e9e8d655bd6a4b83d9bc6dbe9",
+      "commit_date": "2026-10-06T22:21:33-06:00",
+      "commit_subject": "read_message shows the runtime's provenance label",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "b3dedfcb9b6b20939255ef7a8f47b89f71aae0c6"
+    },
+    {
+      "name": "amap-connector-codex",
+      "path": "amap-connector-codex",
+      "remote_url": "https://github.com/proofpoint/amap-connector-codex",
+      "commit": "197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9",
+      "tree": "9723181d13208420bbc36338dbed34a29f46293b",
+      "commit_date": "2026-10-26T18:52:57-06:00",
+      "commit_subject": "Normalize redundant native resume reasoning settings against managed configuration",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "6da353af1bf2bfc7a20b3be94c09e50124014b2c"
+    },
+    {
+      "name": "amap-deploy-sandy",
+      "path": "amap-deploy-sandy",
+      "remote_url": "https://github.com/proofpoint/amap-deploy-sandy.git",
+      "commit": "8a515c104ebe866bbbca4dc613651dbfc2c66412",
+      "tree": "a6a7f42ba55ef0897ba7bcebb38201102f16726c",
+      "commit_date": "2026-10-27T09:44:34-06:00",
+      "commit_subject": "Merge main 4d94c9d3 (#111, squashed) into the M1 unified composition",
+      "branch": "m1/c-8a515c10",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "a2319c316c3e4f0b8bb78912bc2fc39d80042ae8"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "972cb7096bf4110811cbafc20a6a8019d7408576",
+      "tree": "2bb21dd68dacedd391d879c74d7c7b8d4f5ae6ff",
+      "commit_date": "2026-10-06T22:09:51-06:00",
+      "commit_subject": "Configure explicit connector outcome directories (#1)",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "ed86f883acafa82cc8863cc5e4f9c520fde8b168"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local-hop",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "52eafa82c3f6c621828dffb1b4c2a3a94da73d88",
+      "tree": "886ac3bb0a313d6415fb46aad40cb77f061b9e2b",
+      "commit_date": "2026-10-18T08:42:27-06:00",
+      "commit_subject": "RL-REGISTRY-MOUNT: registry_dir mount without hop; run.sh --group-add (#58)",
+      "branch": "hop-integration",
+      "tag": "amap-m1p1-rc1-hop",
+      "tag_object": "e1dccc2c9561c497aa986d3d84b9826d7f089b8a",
+      "temporary": "the hop renderer's router at a hop-integration commit; amap-deploy-sandy's siblings.json marks it temporary"
+    }
+  ],
+  "findings": [
+    "amap-connector-codex: this candidate pins 197ed8bb (M1); amap-2026-10-28 pins e10eb2cf. e10eb2cf is the parent of 197ed8bb, which adds one commit (normalize redundant native resume reasoning settings; 5 files).",
+    "amap-deploy-sandy 8a515c10 is on m1/c-8a515c10 only; it does not contain the install.sh umask fix (#112 on main, #114 on the release line).",
+    "amap-router-local is pinned twice, so the hop pin has its own tag, amap-m1p1-rc1-hop.",
+    "amap-router-local 972cb709 and 52eafa82: docker/entrypoint.sh runs `peers` and `once` without forwarding their flags, so `run.sh -- peers --json` prints the human table and verify's delegation-graph check is always UNKNOWN. Measured on the Spark 2026-10-29T03:55:47Z (exit 0, no JSON). The fix, d221a3d15f9bb9272a4221da3a1a56134348a6d7, is only on rc/RL-ENTRYPOINT-ARGS (on neither main nor hop-integration).",
+    "amap-deploy-sandy 8a515c10 verify: when the router one-shot yields no document, the reason shown is the first 200 characters of stderr (run.sh's mount-count line), which hides the cause.",
+    "Dry run: the default policy selects every sandbox launched with claude, so a pre-existing sandbox relaunched on the host joined the local test fleet (amap-release-c406bc9e, first sight 2026-10-29T03:55:15Z)."
+  ],
+  "dry_run": {
+    "host": "DGX Spark, Linux aarch64 (uname -m measured in a sandbox on the host; the router image built and ran there)",
+    "date": "2026-10-29",
+    "installer": "amap-release install.sh from branch m1p1-rc1, AMAP_RELEASE=amap-m1p1-rc1, fresh AMAP_DIR and fresh feature root and router state",
+    "install": "succeeded: all five pins checked out at their tags, trees verified; install --apply reported no FAIL; Codex conversation mode unified (default); router image built and started",
+    "standalone": "router config has no hop, registry or peer-transport keys; fleet_domain sandy.dgx.internal (INFERRED: no route to other hosts)",
+    "verify": "2026-10-29T03:52:34Z: install up to date (payload 54 files); 2 sandboxes relay-checked; router 13 of 14 checks passed; 1 problem: delegation graph UNKNOWN (finding below)",
+    "message_timeline_utc": [
+      "03:45:45 router starting, instances=[]",
+      "03:50:50 a-f3c66b20 admitted, first sight, 0 quarantined",
+      "03:51:05 b-fdfd8328 admitted, first sight, 0 quarantined",
+      "03:51:55 a-f3c66b20 outbound_seen 1, drained 1, accepted 1",
+      "03:52:00 b-fdfd8328 outbound_seen 1, drained 1, accepted 1",
+      "03:52:30 b-fdfd8328 peer_outcomes_seen 1, peer_delivered 1",
+      "03:52:35 a-f3c66b20 peer_outcomes_seen 1, peer_delivered 1"
+    ],
+    "message_result": "ping from a to b answered (reported by the operator); no rejected, held, denied, refused, quarantined or errored counts and no DSNs. INFERRED: the two peer_delivered lines are the request's and the reply's delivery outcomes.",
+    "not_tested": "the router with the host registry: it needs the private deployment overlay, which is not part of this candidate"
+  }
+}

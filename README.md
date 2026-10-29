@@ -63,6 +63,27 @@ On a host that already runs Codex sandboxes, read
 | `amap-2026-10-28` | [Manifest](releases/amap-2026-10-28/amap-2026-10-28.json) | October 28, 2026 | Codex unified conversations |
 | `amap-2026-10-10` | [Manifest](releases/amap-2026-10-10/amap-2026-10-10.json) | October 16, 2026 | First collective release |
 
+### Release candidates
+
+A release candidate is labelled `amap-<name>-rcN`. It's a pre-release: the
+installer never picks it by default, and it doesn't change the latest release.
+Its manifest also records each pinned commit's `tree`, and the installer
+verifies it.
+
+| Candidate | Manifest | Status |
+| --- | --- | --- |
+| `amap-m1p1-rc1` | [Manifest](releases/amap-m1p1-rc1/amap-m1p1-rc1.json) | M1 phase 1 component set; not a validated release |
+
+Install a candidate by naming it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/proofpoint/amap-release/main/install.sh | AMAP_RELEASE=amap-m1p1-rc1 bash
+```
+
+`amap-m1p1-rc1` pins amap-router-local twice. The second pin, the hop
+renderer's router, is checked out as `amap-router-local-hop` at its own tag,
+`amap-m1p1-rc1-hop`.
+
 The release date is a label. The manifest preserves the actual capture time,
 component commit dates, full commit hashes, remote URLs, and annotated tag
 object hashes. The component repositories carry matching `amap-YYYY-MM-DD`
