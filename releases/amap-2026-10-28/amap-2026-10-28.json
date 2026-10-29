@@ -1,0 +1,133 @@
+{
+  "release": "amap-2026-10-28",
+  "previous_release": "amap-2026-10-10",
+  "captured_at": "2026-10-29T00:34:15.222345+00:00",
+  "scope": "Codex unified conversations: human interaction and incoming AMAP work in one persistent Codex conversation, with supporting fixes. Claude connector and router pins are unchanged from amap-2026-10-10.",
+  "note": "Pins requested in proofpoint/amap-release#1. The deployment commit is on release/amap-2026-10-10 and its siblings.json pins the same four commits.",
+  "activation": "Opt-in only: `amap-sandy.py install --codex-mode unified`. Without it, hosts keep separate mode. Installing this release never migrates or erases existing Codex state.",
+  "repositories": [
+    {
+      "name": "amap-connector-claude",
+      "path": "amap-connector-claude",
+      "remote_url": "https://github.com/proofpoint/amap-connector-claude.git",
+      "commit": "3a20c28080ad560a55e202ea59596c1ae1733661",
+      "commit_date": "2026-10-06T22:21:33-06:00",
+      "commit_subject": "read_message shows the runtime's provenance label",
+      "tag": "amap-2026-10-28",
+      "tag_object": "913ec230067ac2849a93e43910c532278c53bc39",
+      "change": "unchanged"
+    },
+    {
+      "name": "amap-connector-codex",
+      "path": "amap-connector-codex",
+      "remote_url": "https://github.com/proofpoint/amap-connector-codex",
+      "commit": "e10eb2cf22a1056d1506938ef0669bfde582ff75",
+      "commit_date": "2026-10-26T06:27:54-06:00",
+      "commit_subject": "Merge pull request #21 from proofpoint/feat/unified-recovery-adoption",
+      "tag": "amap-2026-10-28",
+      "tag_object": "c53b12f5d95e3ecef1ac869f528cf34fb7cdf78d",
+      "change": "updated",
+      "previous_commit": "87347ad49837563678f50c4119248ecd2dda048d"
+    },
+    {
+      "name": "amap-deploy-sandy",
+      "path": "amap-deploy-sandy",
+      "remote_url": "https://github.com/proofpoint/amap-deploy-sandy.git",
+      "commit": "e4e53626a80f5f2da18db91969091b6d65beb9c4",
+      "commit_date": "2026-10-26T12:30:08-06:00",
+      "commit_subject": "Install the unified readiness checker with the Codex payload (#108)",
+      "tag": "amap-2026-10-28",
+      "tag_object": "84e24100c5cd2033a6d136c02d5e721f0bc5421a",
+      "change": "updated",
+      "previous_commit": "ef93e4f179ebe13470e11e982fdf465f709f0530"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "972cb7096bf4110811cbafc20a6a8019d7408576",
+      "commit_date": "2026-10-06T22:09:51-06:00",
+      "commit_subject": "Configure explicit connector outcome directories (#1)",
+      "tag": "amap-2026-10-28",
+      "tag_object": "77f355bf80bb0a3d90b9d96d4863de38d9349672",
+      "change": "unchanged"
+    }
+  ],
+  "validation": {
+    "sibling_pins_agree": true,
+    "ci": {
+      "amap-deploy-sandy": {
+        "note": "e4e5362 is the merge of PR #108 on release/amap-2026-10-10; its tree 4d2d5fe3 is identical to the PR head 81421b87, where CI ran.",
+        "runs": [
+          "https://github.com/proofpoint/amap-deploy-sandy/actions/runs/40375092343"
+        ],
+        "jobs": {
+          "suite (3.9)": "success",
+          "suite (3.13)": "success",
+          "canary (siblings' main)": "success"
+        }
+      },
+      "amap-connector-codex": {
+        "runs": [
+          "https://github.com/proofpoint/amap-connector-codex/actions/runs/40322736927"
+        ],
+        "jobs": {
+          "pytest (3.11)": "success",
+          "pytest (3.13)": "success",
+          "host-ownership": "success"
+        }
+      },
+      "amap-connector-claude": {
+        "runs": [
+          "https://github.com/proofpoint/amap-connector-claude/actions/runs/37571077697"
+        ],
+        "jobs": {
+          "suite (python 3.9-3.13)": "success",
+          "pip install .": "success"
+        }
+      },
+      "amap-router-local": {
+        "runs": [
+          "https://github.com/proofpoint/amap-router-local/actions/runs/39136973647"
+        ],
+        "jobs": {
+          "suite (3.9)": "success",
+          "suite (3.13)": "success"
+        }
+      }
+    },
+    "local_rerun": {
+      "date": "2026-10-28",
+      "platform": "Linux aarch64, Python 3.13.5; no sandy, Docker or Codex binary",
+      "amap-deploy-sandy": "pytest tests with all four siblings at their pins: 785 passed, 551 subtests passed",
+      "amap-connector-codex": "pytest tests: 665 passed, 8 subtests passed; vendor/amap-spec/fixtures/validate.py: 44 fixtures checked, 0 unexpected"
+    },
+    "installed_payload": "amap-deploy-sandy PR #108: real Codex 0.164.0 human and queued-before-startup/restart probes pass against an actually installed payload and its installed core; subprocess regressions run the installed readiness path from an unrelated directory with python -I -S. https://github.com/proofpoint/amap-deploy-sandy/pull/108"
+  },
+  "evidence": {
+    "scope_note": "Synthetic native evidence: real Codex 0.164.0 with disposable homes and deterministic localhost inference; no user credentials, external inference or fleet traffic. It does not establish target-host acceptance.",
+    "fresh_unified_startup": [
+      "amap-deploy-sandy PR #106 (four concurrent human/queued-message pairs incl. queued-before-birth completion) https://github.com/proofpoint/amap-deploy-sandy/pull/106",
+      "amap-deploy-sandy PR #108 (fresh startup against the installed payload)"
+    ],
+    "canonical_thread_retained_across_restart": [
+      "amap-deploy-sandy PR #106 (same-canonical restart)",
+      "amap-connector-codex compatibility/unified-runtime-0.164.0.json (exact history across restart, pending work across SIGKILL)",
+      "amap-connector-codex compatibility/unified-protocol-0.164.0.json (exact_ordered_history_retained)"
+    ],
+    "incoming_work_queued_during_human_activity": [
+      "amap-connector-codex compatibility/unified-protocol-0.164.0.json (native_human_busy_state_visible, human_turn_observed_by_controller)",
+      "amap-connector-codex compatibility/native-queue-0.164.0.json (queued work waits for the active human turn)",
+      "amap-deploy-sandy PR #106 (active pause with human/queued pairs)"
+    ],
+    "detached_delivery": [
+      "amap-connector-codex compatibility/unified-runtime-0.164.0.json (detached mail; docs/UNIFIED_RUNTIME.md#verification)",
+      "amap-connector-codex compatibility/native-queue-0.164.0.json (work executes after terminal detachment; reattachment shows the response)"
+    ],
+    "no_replay_after_restart": [
+      "amap-deploy-sandy PR #106 (no replay)",
+      "amap-connector-codex compatibility/unified-protocol-0.164.0.json (reattach_same_history_without_replay)",
+      "amap-connector-codex tests: test_journal.py::test_durable_acceptance_no_replay, test_supervisor.py::test_finished_notice_is_never_replayed_after_scan_and_restart, test_native_queue.py::test_native_human_pending_is_not_automatically_replayed_when_duplicated"
+    ]
+  }
+}
