@@ -1,0 +1,80 @@
+{
+  "release": "amap-m1p1-rc1",
+  "status": "release candidate, unpublished: not a validated M1P1 release",
+  "prerelease": true,
+  "based_on": "the M1 phase 1 component set; amap-deploy-sandy 8a515c10 siblings.json pins the other four exactly",
+  "captured_at": "2026-10-29T03:33:30.995897+00:00",
+  "note": "Pins and trees measured 2026-10-29 from cloned repositories; every tree matched. Component tags created 2026-10-29 with Dan's approval; amap-router-local carries two, one per pin.",
+  "acceptance": {
+    "forge": "accepted 2026-10-23 (reported, not measured here)",
+    "mac": "UNKNOWN: writer sitting scheduled 2026-10-29 05:00 MDT"
+  },
+  "repositories": [
+    {
+      "name": "amap-connector-claude",
+      "path": "amap-connector-claude",
+      "remote_url": "https://github.com/proofpoint/amap-connector-claude.git",
+      "commit": "3a20c28080ad560a55e202ea59596c1ae1733661",
+      "tree": "d26bc77a0bf94e2e9e8d655bd6a4b83d9bc6dbe9",
+      "commit_date": "2026-10-06T22:21:33-06:00",
+      "commit_subject": "read_message shows the runtime's provenance label",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "b3dedfcb9b6b20939255ef7a8f47b89f71aae0c6"
+    },
+    {
+      "name": "amap-connector-codex",
+      "path": "amap-connector-codex",
+      "remote_url": "https://github.com/proofpoint/amap-connector-codex",
+      "commit": "197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9",
+      "tree": "9723181d13208420bbc36338dbed34a29f46293b",
+      "commit_date": "2026-10-26T18:52:57-06:00",
+      "commit_subject": "Normalize redundant native resume reasoning settings against managed configuration",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "6da353af1bf2bfc7a20b3be94c09e50124014b2c"
+    },
+    {
+      "name": "amap-deploy-sandy",
+      "path": "amap-deploy-sandy",
+      "remote_url": "https://github.com/proofpoint/amap-deploy-sandy.git",
+      "commit": "8a515c104ebe866bbbca4dc613651dbfc2c66412",
+      "tree": "a6a7f42ba55ef0897ba7bcebb38201102f16726c",
+      "commit_date": "2026-10-27T09:44:34-06:00",
+      "commit_subject": "Merge main 4d94c9d3 (#111, squashed) into the M1 unified composition",
+      "branch": "m1/c-8a515c10",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "a2319c316c3e4f0b8bb78912bc2fc39d80042ae8"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "972cb7096bf4110811cbafc20a6a8019d7408576",
+      "tree": "2bb21dd68dacedd391d879c74d7c7b8d4f5ae6ff",
+      "commit_date": "2026-10-06T22:09:51-06:00",
+      "commit_subject": "Configure explicit connector outcome directories (#1)",
+      "branch": "main",
+      "tag": "amap-m1p1-rc1",
+      "tag_object": "ed86f883acafa82cc8863cc5e4f9c520fde8b168"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local-hop",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "52eafa82c3f6c621828dffb1b4c2a3a94da73d88",
+      "tree": "886ac3bb0a313d6415fb46aad40cb77f061b9e2b",
+      "commit_date": "2026-10-18T08:42:27-06:00",
+      "commit_subject": "RL-REGISTRY-MOUNT: registry_dir mount without hop; run.sh --group-add (#58)",
+      "branch": "hop-integration",
+      "tag": "amap-m1p1-rc1-hop",
+      "tag_object": "e1dccc2c9561c497aa986d3d84b9826d7f089b8a",
+      "temporary": "the hop renderer's router at a hop-integration commit; amap-deploy-sandy's siblings.json marks it temporary"
+    }
+  ],
+  "findings": [
+    "amap-connector-codex: this candidate pins 197ed8bb (M1); amap-2026-10-28 pins e10eb2cf. e10eb2cf is the parent of 197ed8bb, which adds one commit (normalize redundant native resume reasoning settings; 5 files).",
+    "amap-deploy-sandy 8a515c10 is on m1/c-8a515c10 only; it does not contain the install.sh umask fix (#112 on main, #114 on the release line).",
+    "amap-router-local is pinned twice, so the hop pin has its own tag, amap-m1p1-rc1-hop."
+  ]
+}

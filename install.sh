@@ -62,11 +62,12 @@ say() { printf '[amap] %s\n' "$*"; }
 die() { printf '[amap] error: %s\n' "$*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "$1 is not on PATH. $2"; }
 
-# checkout NAME URL COMMIT TAG TAG_OBJECT: $AMAP_DIR/NAME, detached at TAG,
-# whose commit must be COMMIT.
+# checkout NAME PATH URL COMMIT TREE TAG TAG_OBJECT: repository NAME at
+# $AMAP_DIR/PATH, detached at TAG, whose commit must be COMMIT and, unless
+# TREE is "-", whose tree must be TREE.
 checkout() {
-  local name=$1 url=$2 commit=$3 tag=$4 tag_object=$5
-  local dest="$AMAP_DIR/$name" cloned=0
+  local name=$1 path=$2 url=$3 commit=$4 tree=$5 tag=$6 tag_object=$7
+  local dest="$AMAP_DIR/$path" cloned=0
   if [ -d "$dest/.git" ]; then
     [ -z "$(git -C "$dest" status --porcelain --untracked-files=no)" ] \
       || die "$dest has local changes. Commit or stash them, then re-run."
@@ -83,11 +84,13 @@ checkout() {
   # The commit is the pin. A re-created tag on the same commit is reported.
   [ "$(git -C "$dest" rev-parse "refs/tags/$tag^{commit}")" = "$commit" ] \
     || die "$name: tag $tag does not point at the manifest's commit ($commit)."
+  [ "$tree" = "-" ] || [ "$(git -C "$dest" rev-parse "$commit^{tree}")" = "$tree" ] \
+    || die "$name: commit ${commit:0:12} does not have the manifest's tree ($tree)."
   [ "$(git -C "$dest" rev-parse "refs/tags/$tag")" = "$tag_object" ] \
     || say "note: $name's tag $tag is not the tag object the manifest records (${tag_object:0:12}); its commit matches."
   # A fresh --no-checkout clone has no working tree, whatever its HEAD.
   if [ "$cloned" = 1 ] || [ "$(git -C "$dest" rev-parse -q --verify HEAD || true)" != "$commit" ]; then
-    say "checking out $name at $tag (${commit:0:12})"
+    say "checking out $path at $tag (${commit:0:12})"
     git -C "$dest" -c advice.detachedHead=false checkout --quiet --detach "$commit"
   fi
   # install refuses a group- or world-writable protected Codex asset, which a
@@ -95,7 +98,7 @@ checkout() {
   local writable
   writable=$(find "$dest" -path "$dest/.git" -prune -o -type f \( -perm -020 -o -perm -002 \) -print | wc -l)
   if [ "$writable" -gt 0 ]; then
-    say "removing group/world write from $writable file(s) in $name"
+    say "removing group/world write from $writable file(s) in $path"
     find "$dest" -path "$dest/.git" -prune -o -type f \( -perm -020 -o -perm -002 \) -exec chmod go-w {} +
   fi
 }
@@ -137,17 +140,15 @@ print(" ".join(names))
 main() {
   # The checkouts are the ones under $AMAP_DIR: an override pointing elsewhere
   # would install and build from a tree this script did not put at the release.
-  unset AMAP_ROUTER_REPO AMAP_CONNECTOR_REPO AMAP_CODEX_CONNECTOR_REPO
+  unset AMAP_ROUTER_REPO AMAP_HOP_ROUTER_REPO AMAP_CONNECTOR_REPO AMAP_CODEX_CONNECTOR_REPO
   # Checkouts and installed files are the operator's alone.
   umask 022
   case "${AMAP_CODEX_MODE:-}" in
     ""|unified|separate) ;;
     *) die "AMAP_CODEX_MODE must be unified or separate (got: $AMAP_CODEX_MODE)." ;;
   esac
-  case "$AMAP_RELEASE" in
-    amap-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
-    *) die "AMAP_RELEASE must be a release label such as $LATEST_RELEASE (got: $AMAP_RELEASE)." ;;
-  esac
+  [[ "$AMAP_RELEASE" =~ ^amap-[A-Za-z0-9][A-Za-z0-9._-]*$ && "$AMAP_RELEASE" != *..* ]] \
+    || die "AMAP_RELEASE must be a release label such as $LATEST_RELEASE (got: $AMAP_RELEASE)."
 
   # --- what this host needs, checked before anything is written ------------
   need curl "Install curl, then re-run."
@@ -172,38 +173,46 @@ main() {
   local manifest
   manifest=$(curl -fsSL "$AMAP_RELEASE_RAW/releases/$AMAP_RELEASE/$AMAP_RELEASE.json") \
     || die "release $AMAP_RELEASE has no manifest at $AMAP_RELEASE_RAW. Check AMAP_RELEASE."
-  # One line per repository: name, remote URL, commit, tag, tag object.
+  # One line per checkout: name, path, remote URL, commit, tree ("-" when the
+  # manifest records none), tag, tag object. A repository may be pinned twice,
+  # at two paths.
   local rows
   rows=$(printf '%s' "$manifest" | python3 -I -c '
 import json, re, sys
 m = json.load(sys.stdin)
+paths = set()
 for r in m["repositories"]:
-    for k in ("commit", "tag_object"):
-        if not re.fullmatch("[0-9a-f]{40}", r[k]):
-            sys.exit("manifest field %s of %s is not a full commit hash" % (k, r["name"]))
-    if not re.fullmatch(r"[A-Za-z0-9._-]+", r["name"]):
-        sys.exit("manifest names an unexpected repository: %r" % r["name"])
-    print(r["name"], r["remote_url"], r["commit"], r["tag"], r["tag_object"])
+    for k in ("name", "path", "tag"):
+        if not isinstance(r.get(k), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", r[k]) or ".." in r[k]:
+            sys.exit("manifest field %s of %r is missing or unexpected" % (k, r.get("name")))
+    for k in ("commit", "tag_object") + (("tree",) if "tree" in r else ()):
+        if not isinstance(r[k], str) or not re.fullmatch("[0-9a-f]{40}", r[k]):
+            sys.exit("manifest field %s of %s is not a full hash" % (k, r["path"]))
+    if r["path"] in paths:
+        sys.exit("manifest names the path %s twice" % r["path"])
+    paths.add(r["path"])
+    print(r["name"], r["path"], r["remote_url"], r["commit"], r.get("tree", "-"), r["tag"], r["tag_object"])
 ') || die "the manifest for $AMAP_RELEASE could not be read."
 
   # --- the checkouts, side by side, at the release tag -------------------------
   # The Codex connector is checked out once the conversation mode is known.
   mkdir -p "$AMAP_DIR"
-  local name url commit tag tag_object codex_row=""
-  while read -r -u 3 name url commit tag tag_object; do
+  local name path url commit tree tag tag_object codex_row=""
+  while read -r -u 3 name path url commit tree tag tag_object; do
     if [ "$name" = "$CODEX_REPO" ]; then
-      codex_row="$name $url $commit $tag $tag_object"
+      codex_row="$name $path $url $commit $tree $tag $tag_object"
     else
-      checkout "$name" "$url" "$commit" "$tag" "$tag_object"
+      checkout "$name" "$path" "$url" "$commit" "$tree" "$tag" "$tag_object"
     fi
   done 3<<<"$rows"
 
-  # The deployment's own pins must name the same commits as the manifest.
+  # The deployment's own pins must name the same commits as the manifest, at
+  # the same checkout directories.
   local deploy="$AMAP_DIR/amap-deploy-sandy"
   printf '%s' "$rows" | python3 -I -c '
 import json, sys
-manifest = {n: c for n, _, c, _, _ in (l.split() for l in sys.stdin.read().splitlines())}
-pins = {s["name"]: s["commit"] for s in json.load(open(sys.argv[1]))["siblings"]}
+manifest = {p: c for _, p, _, c, _, _, _ in (l.split() for l in sys.stdin.read().splitlines())}
+pins = {s.get("dir", s["name"]): s["commit"] for s in json.load(open(sys.argv[1]))["siblings"]}
 bad = [n for n in pins if manifest.get(n) != pins[n]]
 sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if bad else 0)
 ' "$deploy/siblings.json" || die "the release's deployment and manifest disagree; nothing was installed."
@@ -237,7 +246,7 @@ sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if b
   fi
   if [ "${AMAP_CODEX:-}" = "1" ]; then
     [ -n "$codex_row" ] || die "release $AMAP_RELEASE has no $CODEX_REPO."
-    # shellcheck disable=SC2086  # five space-free fields
+    # shellcheck disable=SC2086  # seven space-free fields
     checkout $codex_row
   elif [ -n "$codex_row" ]; then
     say "skipping $CODEX_REPO (set AMAP_CODEX=1 to include it)"
