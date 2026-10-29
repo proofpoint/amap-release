@@ -81,13 +81,26 @@ router pins are unchanged.
 | --- | --- | --- |
 | [amap-connector-claude](https://github.com/proofpoint/amap-connector-claude.git) | `3a20c28080ad560a55e202ea59596c1ae1733661` | Unchanged |
 | [amap-connector-codex](https://github.com/proofpoint/amap-connector-codex) | `e10eb2cf22a1056d1506938ef0669bfde582ff75` | Updated |
-| [amap-deploy-sandy](https://github.com/proofpoint/amap-deploy-sandy.git) | `e4e53626a80f5f2da18db91969091b6d65beb9c4` | Updated |
+| [amap-deploy-sandy](https://github.com/proofpoint/amap-deploy-sandy.git) | `3b605d028ad312442e9569b9a9e7fcfe7f4c9efb` | Updated |
 | [amap-router-local](https://github.com/proofpoint/amap-router-local.git) | `972cb7096bf4110811cbafc20a6a8019d7408576` | Unchanged |
 
 The deployment commit is on amap-deploy-sandy's `release/amap-2026-10-10`
 line. It includes the installed readiness-checker fix
-([amap-deploy-sandy#108](https://github.com/proofpoint/amap-deploy-sandy/pull/108)),
-and its `siblings.json` pins the same three component commits as the manifest.
+([amap-deploy-sandy#108](https://github.com/proofpoint/amap-deploy-sandy/pull/108))
+and the `install.sh` umask fix
+([amap-deploy-sandy#114](https://github.com/proofpoint/amap-deploy-sandy/pull/114)).
+Its `siblings.json` pins the same three component commits as the manifest.
+
+**Re-cut on October 28.** This release was first published with the
+deployment at `e4e53626a80f5f2da18db91969091b6d65beb9c4` (tag object
+`84e24100c5cd2033a6d136c02d5e721f0bc5421a`). Its `install.sh` failed silently
+under a umask of `002` with the Codex connector checked out
+([amap-deploy-sandy#113](https://github.com/proofpoint/amap-deploy-sandy/issues/113)).
+The deployment pin moved to its child `3b605d0`, which changes only
+`install.sh` and its tests. amap-deploy-sandy's `amap-2026-10-28` tag and this
+repository's `2026-10-28` tag were re-pointed, and the backup was rebuilt. The
+other three component tags are unchanged. A checkout fetched before the re-cut
+keeps the old tags: run `git fetch --tags --force` to update them.
 
 #### Codex unified conversations
 
@@ -123,11 +136,11 @@ sandbox, create the fresh one, restart the router, and establish fresh first
 sight before sending work. Removal discards the sandbox's native history and
 mailbox contents. Follow the release line's runbook exactly:
 
-- [Fleet choice: fresh unified Codex conversations](https://github.com/proofpoint/amap-deploy-sandy/blob/e4e53626a80f5f2da18db91969091b6d65beb9c4/docs/TUTORIAL.md#fleet-choice-fresh-unified-codex-conversations)
-- [Recreating existing Codex-only sandboxes deliberately](https://github.com/proofpoint/amap-deploy-sandy/blob/e4e53626a80f5f2da18db91969091b6d65beb9c4/docs/TUTORIAL.md#recreating-existing-codex-only-sandboxes-deliberately)
+- [Fleet choice: fresh unified Codex conversations](https://github.com/proofpoint/amap-deploy-sandy/blob/3b605d028ad312442e9569b9a9e7fcfe7f4c9efb/docs/TUTORIAL.md#fleet-choice-fresh-unified-codex-conversations)
+- [Recreating existing Codex-only sandboxes deliberately](https://github.com/proofpoint/amap-deploy-sandy/blob/3b605d028ad312442e9569b9a9e7fcfe7f4c9efb/docs/TUTORIAL.md#recreating-existing-codex-only-sandboxes-deliberately)
 
 Adoption of an existing saved conversation, which keeps its history, is
-[documented as experimental](https://github.com/proofpoint/amap-deploy-sandy/blob/e4e53626a80f5f2da18db91969091b6d65beb9c4/docs/TUTORIAL.md#experimental-unified-conversation-existing-instance-transition)
+[documented as experimental](https://github.com/proofpoint/amap-deploy-sandy/blob/3b605d028ad312442e9569b9a9e7fcfe7f4c9efb/docs/TUTORIAL.md#experimental-unified-conversation-existing-instance-transition)
 and isn't supported in this release. On this release line, normal Sandy
 startup holds an adopted sandbox instead of reopening its conversation. The
 fix ([amap-deploy-sandy#109](https://github.com/proofpoint/amap-deploy-sandy/pull/109))
@@ -144,22 +157,23 @@ sandy --exec --workspace "$WORKSPACE" -- python3 /opt/sandy/features/amap/codex/
 
 The manifest's `validation` and `evidence` fields hold the full record.
 
-- **Pins agree.** amap-deploy-sandy's `siblings.json` at `e4e5362` names the
+- **Pins agree.** amap-deploy-sandy's `siblings.json` at `3b605d0` names the
   same Claude connector, Codex connector, and router commits as the manifest.
-- **CI.** Every required job passed for each pinned commit. `e4e5362` is the
-  merge of [#108](https://github.com/proofpoint/amap-deploy-sandy/pull/108). Its
+- **CI.** Every required job passed for each pinned commit. `3b605d0` is the
+  merge of [#114](https://github.com/proofpoint/amap-deploy-sandy/pull/114). Its
   tree is identical to the pull request head, where
-  [CI ran](https://github.com/proofpoint/amap-deploy-sandy/actions/runs/40375092343)
+  [CI ran](https://github.com/proofpoint/amap-deploy-sandy/actions/runs/40811084590)
   (Python 3.9, 3.13, and the sibling-main canary). Codex connector:
   [run](https://github.com/proofpoint/amap-connector-codex/actions/runs/40322736927).
   Claude connector: [run](https://github.com/proofpoint/amap-connector-claude/actions/runs/37571077697).
   Router: [run](https://github.com/proofpoint/amap-router-local/actions/runs/39136973647).
 - **Local re-run** (October 28, Python 3.13, all four checkouts at their pins):
-  amap-deploy-sandy 785 tests passed; amap-connector-codex 665 tests passed,
+  amap-deploy-sandy 788 tests passed; amap-connector-codex 665 tests passed,
   and 44 spec fixtures checked with none unexpected.
 - **Installed payload.** Real Codex 0.164.0 human and
   queued-before-startup/restart probes pass against an actually installed
   payload ([#108](https://github.com/proofpoint/amap-deploy-sandy/pull/108)).
+  The re-cut changes only `install.sh` and its tests, not the payload.
 
 Evidence for each required behavior, from real Codex 0.164.0 with disposable
 homes and synthetic local inference:
