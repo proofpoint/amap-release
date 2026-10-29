@@ -90,6 +90,14 @@ checkout() {
     say "checking out $name at $tag (${commit:0:12})"
     git -C "$dest" -c advice.detachedHead=false checkout --quiet --detach "$commit"
   fi
+  # install refuses a group- or world-writable protected Codex asset, which a
+  # checkout made under a umask of 002 (Ubuntu's default) has.
+  local writable
+  writable=$(find "$dest" -path "$dest/.git" -prune -o -type f \( -perm -020 -o -perm -002 \) -print | wc -l)
+  if [ "$writable" -gt 0 ]; then
+    say "removing group/world write from $writable file(s) in $name"
+    find "$dest" -path "$dest/.git" -prune -o -type f \( -perm -020 -o -perm -002 \) -exec chmod go-w {} +
+  fi
 }
 
 # default_codex_mode MANIFEST: prints "unified" when the default may be
@@ -130,6 +138,8 @@ main() {
   # The checkouts are the ones under $AMAP_DIR: an override pointing elsewhere
   # would install and build from a tree this script did not put at the release.
   unset AMAP_ROUTER_REPO AMAP_CONNECTOR_REPO AMAP_CODEX_CONNECTOR_REPO
+  # Checkouts and installed files are the operator's alone.
+  umask 022
   case "${AMAP_CODEX_MODE:-}" in
     ""|unified|separate) ;;
     *) die "AMAP_CODEX_MODE must be unified or separate (got: $AMAP_CODEX_MODE)." ;;
@@ -235,7 +245,8 @@ sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if b
 
   # --- the manifest, the payload, the router's config and its directories -----
   say "installing the AMAP feature from $AMAP_RELEASE into $SANDY_HOME/features/amap"
-  SANDY_HOME="$SANDY_HOME" python3 "$amap_sandy" install --apply ${install_args[@]+"${install_args[@]}"}
+  SANDY_HOME="$SANDY_HOME" python3 "$amap_sandy" install --apply ${install_args[@]+"${install_args[@]}"} \
+    || die "install --apply reported a failure (FAIL above); the router was not started. Fix it, then re-run."
   local config="$SANDY_HOME/features/amap/router.json"
   [ -f "$config" ] || die "install did not write $config; see its output above."
 
