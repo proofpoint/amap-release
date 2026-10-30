@@ -10,8 +10,10 @@ permissions:
 
 jobs:
   release-contract:
-    runs-on: ubuntu-latest
+    # Ubuntu 26.04 has no setup-python build for the supported Python 3.9.
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         python: ['3.9', '3.13']
     steps:
