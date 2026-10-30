@@ -35,11 +35,17 @@ already, sandy must accept the Codex `agent_wrapper`, and sandy must report no
 sandbox launched with Codex. Otherwise the host keeps its current mode and the
 installer says why.
 
+In the latest release, a mixed Claude/Codex sandbox remains Claude-served.
+Its Codex pane starts with Sandy's native arguments, without the Codex
+supervisor's interactive tools. A fleet-wide unified choice does not disable
+that pane. Retained Codex unified ownership still requires explicit disposition
+before changing to Claude-served operation.
+
 Settings, passed as environment variables to `bash`:
 
 | Variable | Effect |
 | --- | --- |
-| `AMAP_RELEASE` | The release to install, such as `amap-2026-10-28`. Defaults to the latest. |
+| `AMAP_RELEASE` | The release to install, such as `amap-2026-10-30`. Defaults to the latest. |
 | `AMAP_DIR` | Where the checkouts go. Defaults to `~/amap`. |
 | `SANDY_HOME` | sandy's home. Defaults to `~/.sandy`. |
 | `AMAP_CODEX=1` | Also check out amap-connector-codex, so Codex sandboxes get a delivery supervisor. |
@@ -60,6 +66,7 @@ On a host that already runs Codex sandboxes, read
 
 | Release | Manifest | Captured | Scope |
 | --- | --- | --- | --- |
+| `amap-2026-10-30` | [Manifest](releases/amap-2026-10-30/amap-2026-10-30.json) | October 30, 2026 | Unified adoption and mixed-agent Codex panes |
 | `amap-2026-10-28` | [Manifest](releases/amap-2026-10-28/amap-2026-10-28.json) | October 28, 2026 | Codex unified conversations |
 | `amap-2026-10-10` | [Manifest](releases/amap-2026-10-10/amap-2026-10-10.json) | October 16, 2026 | First collective release |
 
@@ -69,6 +76,93 @@ object hashes. The component repositories carry matching `amap-YYYY-MM-DD`
 release tags. This repository tags each release as plain `YYYY-MM-DD` and
 publishes it as a [GitHub release](https://github.com/proofpoint/amap-release/releases),
 so release `amap-2026-10-10` is tag `2026-10-10` here.
+
+### amap-2026-10-30
+
+Supports explicit adoption of retained Codex conversations and fixes the Codex
+pane refusing to start in `SANDY_AGENT=claude,codex` with
+`AMAP_CODEX_MODE=unified`. The deployment changes are included through the release-line backport
+[amap-deploy-sandy#115](https://github.com/proofpoint/amap-deploy-sandy/pull/115).
+The Codex connector adds compatibility for a native resume that repeats the
+managed reasoning effort. The router and Claude connector commits stay unchanged.
+The October 28 release records and tags stay unchanged.
+
+| Repository | Commit | Change |
+| --- | --- | --- |
+| amap-connector-claude | `3a20c28080ad560a55e202ea59596c1ae1733661` | Unchanged |
+| amap-connector-codex | `197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9` | Updated |
+| amap-deploy-sandy | `d91258c331753c553be05a94c8e818de4ab8ec6b` | Updated |
+| amap-router-local | `972cb7096bf4110811cbafc20a6a8019d7408576` | Unchanged |
+
+Claude remains the sole AMAP receiver in a mixed sandbox. Codex runs as a
+native pane with its full argument vector preserved. Both mixed-agent orders
+and combinations with additional agents are supported. Unknown fleet modes,
+retained adoption/fresh markers, parent birth intent, and outbox custody still
+refuse automatic ownership transfer.
+
+**Adoption is explicit.** Installing the release preserves existing state and
+does not adopt or recreate a sandbox. Select a saved thread, pause the target,
+and stop its Codex service and native clients while keeping container exec
+available. Follow the [retained-conversation runbook](https://github.com/proofpoint/amap-deploy-sandy/blob/amap-2026-10-30/docs/TUTORIAL.md#experimental-unified-conversation-existing-instance-transition):
+prepare, static doctor, native `unified-adopt`, confirm, unpause, and restart
+only the target. Keep the router running. Original history, previous
+configuration and delivery journal are retained; no model input is submitted by
+adoption. Use Sandy's system `/usr/bin/python3` for maintenance.
+
+Ordinary startup recognizes a confirmed adoption and reopens its canonical
+conversation. Host verify and startup use one confirmation rule: the native
+adoption row must be confirmed and agree with the recorded thread, previous and
+target fingerprints, and protected policy binding. Missing, planned, foreign or
+contradictory evidence is UNKNOWN/HOLD. Fresh custody guards stay in force.
+Runtime heartbeat, generation, readiness and settings checks still apply.
+
+When the native CLI has advanced since the retained controller was written,
+`transition prepare --use-installed-codex-version` explicitly measures the
+installed build for the target while preserving the previous configuration and
+journal identity until adoption commits. Different protected configuration or
+reasoning-effort overrides still refuse.
+
+**Upgrading an older confirmed adoption.** A record that lacks
+`previous_fingerprint` holds for explicit revalidation. With its relay held,
+Codex service and native clients stopped, and container exec available, run:
+
+```bash
+sandy --exec --workspace "$WORKSPACE" -- /usr/bin/python3 /opt/sandy/features/amap/codex/transition confirm
+sandy --exec --workspace "$WORKSPACE" -- /usr/bin/python3 /opt/sandy/features/amap/codex/transition confirm --apply
+```
+
+Confirmation derives the expectation from the retained previous controller,
+checks the native adoption, and enriches the existing record. It changes no
+journal row or controller bytes and does not re-adopt history. Then release an
+explicit pause, if present, and restart only that sandbox. Do not erase state or
+repeat `unified-adopt` merely to add the missing field.
+
+Inventory discovery now uses one complete Sandy state read per install/verify,
+with a bounded 120-second wait. A failed read remains a named failure. No
+temporary light-inventory wrapper is required by this release.
+
+The release contract check fetches the exact component commits, verifies the
+deployment's sibling pins, and executes its shipped launcher against synthetic
+native commands. It checks mixed-agent startup, argument preservation, unknown
+modes, and retained ownership as regular files and dangling symlinks. On Python
+3.11+, it also runs the pinned deployment's actual transition, adoption/verify
+mutation, legacy revalidation and inventory suites. On Python 3.9 it verifies
+that the host adoption modules import without native dependencies:
+
+```bash
+python3 scripts/check-release.py --components-dir /tmp/amap-release-components --fetch
+```
+
+Before promotion, require green deployment CI and verify the published
+annotated tag objects as well:
+
+```bash
+python3 scripts/check-release.py --components-dir /tmp/amap-release-components --require-published-tags
+```
+
+These checks start no Sandy container, router, inference, or native conversation.
+They do not establish target-host acceptance. Use the runbook's native lifecycle
+and messaging pilot before relying on a newly adopted instance.
 
 ### amap-2026-10-28
 
@@ -218,7 +312,7 @@ workspace, with `RELEASE` set to a release label. These commands contact
 GitHub and create four new directories.
 
 ```bash
-RELEASE=amap-2026-10-28
+RELEASE=amap-2026-10-30
 git clone --branch "$RELEASE" https://github.com/proofpoint/amap-connector-claude.git amap-connector-claude
 git clone --branch "$RELEASE" https://github.com/proofpoint/amap-connector-codex amap-connector-codex
 git clone --branch "$RELEASE" https://github.com/proofpoint/amap-deploy-sandy.git amap-deploy-sandy
@@ -236,12 +330,12 @@ original manifest, checksums, and `RESTORE.txt`. Each archive was verified by
 restoring all four repositories and checking their release commits, tag
 objects, and Git object integrity.
 
-The archive is stored separately from this repository (backup to your own
-storage). This repository tracks its SHA-256 checksum beside the manifest.
+The October 30 archive is attached to the [GitHub release](https://github.com/proofpoint/amap-release/releases/tag/2026-10-30).
+This repository tracks its SHA-256 checksum beside the manifest.
 After obtaining the archive, place it and the checksum file in one directory:
 
 ```bash
-RELEASE=amap-2026-10-28
+RELEASE=amap-2026-10-30
 sha256sum -c "$RELEASE-backup.tar.gz.sha256"
 tar -xzf "$RELEASE-backup.tar.gz"
 cd "$RELEASE"
