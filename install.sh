@@ -40,15 +40,15 @@
 #                   get a delivery supervisor (implied by unified mode)
 #   AMAP_CODEX_MODE=unified|separate
 #                   author the fleet's Codex conversation mode, overriding the
-#                   default above. Unified applies to newly created Codex-served
-#                   sandboxes only; existing ones hold for the operator
+#                   default above. Unified starts fresh Codex-served sandboxes
+#                   and confirmed adoptions; unconfirmed retained state holds
 #   AMAP_FLEET_DOMAIN_BASE  a fresh host's fleet domain is sandy.<host>.<this>
 #                   (default: internal, non-routable)
 #   AMAP_RELEASE_RAW  where release manifests are read from
 #                   (default: this repository's main branch on GitHub)
 set -euo pipefail
 
-LATEST_RELEASE=amap-2026-10-28
+LATEST_RELEASE=amap-2026-10-30
 
 AMAP_RELEASE="${AMAP_RELEASE:-$LATEST_RELEASE}"
 AMAP_DIR="${AMAP_DIR:-$HOME/amap}"
@@ -127,7 +127,7 @@ print(" ".join(names))
 ') || { say "note: sandy --print-state could not be read, so Codex stays in its current mode." >&2; return 0; }
   if [ -n "$codex" ]; then
     say "note: Codex sandboxes already exist ($codex), so Codex stays in its current mode." >&2
-    say "  Unified mode would hold them until recreated. To choose it anyway, read the" >&2
+    say "  Existing state needs explicit adoption or recreation. Before choosing unified, read the" >&2
     say "  release README's operator procedure, then re-run with AMAP_CODEX_MODE=unified." >&2
     return 0
   fi
@@ -286,9 +286,9 @@ sys.exit("siblings.json disagrees with the manifest for: " + ", ".join(bad) if b
 EOF
   if [ "$codex_mode" = "unified" ]; then
     cat <<EOF
-[amap] Unified Codex conversations apply to NEWLY CREATED Codex-served sandboxes.
-[amap] Existing Codex sandboxes keep their state and hold; see the release
-[amap] README for the operator procedure before recreating any of them.
+[amap] Unified Codex conversations support fresh Codex-served sandboxes and confirmed adoptions.
+[amap] Unconfirmed retained Codex state is held; see the release README for explicit adoption or recreation.
+[amap] Mixed Claude/Codex sandboxes remain Claude-served and keep a native Codex pane.
 EOF
   fi
 }
