@@ -66,6 +66,7 @@ On a host that already runs Codex sandboxes, read
 
 | Release | Manifest | Captured | Scope |
 | --- | --- | --- | --- |
+| `amap-2026-10-30.1` | [Manifest](releases/amap-2026-10-30.1/amap-2026-10-30.1.json) | October 30, 2026 | Adopted Codex follows Sandy CLI updates |
 | `amap-2026-10-30` | [Manifest](releases/amap-2026-10-30/amap-2026-10-30.json) | October 30, 2026 | Unified adoption and mixed-agent Codex panes |
 | `amap-2026-10-28` | [Manifest](releases/amap-2026-10-28/amap-2026-10-28.json) | October 28, 2026 | Codex unified conversations |
 | `amap-2026-10-10` | [Manifest](releases/amap-2026-10-10/amap-2026-10-10.json) | October 16, 2026 | First collective release |
@@ -76,6 +77,30 @@ object hashes. The component repositories carry matching `amap-YYYY-MM-DD`
 release tags. This repository tags each release as plain `YYYY-MM-DD` and
 publishes it as a [GitHub release](https://github.com/proofpoint/amap-release/releases),
 so release `amap-2026-10-10` is tag `2026-10-10` here.
+
+### amap-2026-10-30.1
+
+Fixes confirmed adopted Codex sandboxes holding after Sandy automatically
+updates the CLI. On restart, the relay measures the new build, takes exclusive
+ownership, retains the prior controller bytes, and updates only its build
+string. The original adoption receipt, canonical thread, protected policy and
+native binding are retained. The journal audits the version on service startup.
+Both startup and host verify accept the current controller only if restoring
+the adoption-time version reproduces its exact confirmed bytes. Model,
+permissions, tools and other configuration changes still require their existing
+explicit procedures. Downgrades, paused or actively owned state, and incomplete
+native adoption refuse. The measured backend must still pass live compatibility
+and readiness checks; unreviewed build numbers alone do not block startup.
+
+The pane waits for the current container's selection challenge and reports the
+relay's hold reason while waiting. The refresh applies to confirmed adoptions;
+fresh-birth lifecycle rules are unchanged. Older adoption records still need
+the one-time explicit revalidation documented below.
+
+This patch changes only the deployment commit; router and connector commits
+stay at October 30's pins. Install the latest release with the command above,
+then restart the affected sandbox. Existing release labels and tags remain
+unchanged. Patch labels use a numeric suffix, such as `.1`.
 
 ### amap-2026-10-30
 
@@ -330,7 +355,7 @@ original manifest, checksums, and `RESTORE.txt`. Each archive was verified by
 restoring all four repositories and checking their release commits, tag
 objects, and Git object integrity.
 
-The October 30 archive is attached to the [GitHub release](https://github.com/proofpoint/amap-release/releases/tag/2026-10-30).
+The latest archive is attached to the [October 30 patch release](https://github.com/proofpoint/amap-release/releases/tag/2026-10-30.1).
 This repository tracks its SHA-256 checksum beside the manifest.
 After obtaining the archive, place it and the checksum file in one directory:
 

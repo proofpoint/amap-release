@@ -48,7 +48,7 @@
 #                   (default: this repository's main branch on GitHub)
 set -euo pipefail
 
-LATEST_RELEASE=amap-2026-10-30
+LATEST_RELEASE=amap-2026-10-30.1
 
 AMAP_RELEASE="${AMAP_RELEASE:-$LATEST_RELEASE}"
 AMAP_DIR="${AMAP_DIR:-$HOME/amap}"
@@ -144,10 +144,9 @@ main() {
     ""|unified|separate) ;;
     *) die "AMAP_CODEX_MODE must be unified or separate (got: $AMAP_CODEX_MODE)." ;;
   esac
-  case "$AMAP_RELEASE" in
-    amap-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
-    *) die "AMAP_RELEASE must be a release label such as $LATEST_RELEASE (got: $AMAP_RELEASE)." ;;
-  esac
+  if ! [[ "$AMAP_RELEASE" =~ ^amap-[0-9]{4}-[0-9]{2}-[0-9]{2}(\.[1-9][0-9]*)?$ ]]; then
+    die "AMAP_RELEASE must be a release label such as $LATEST_RELEASE (got: $AMAP_RELEASE)."
+  fi
 
   # --- what this host needs, checked before anything is written ------------
   need curl "Install curl, then re-run."
