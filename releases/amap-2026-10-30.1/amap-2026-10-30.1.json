@@ -1,0 +1,142 @@
+{
+  "release": "amap-2026-10-30.1",
+  "previous_release": "amap-2026-10-30",
+  "captured_at": "2026-10-30T21:27:54.585792+00:00",
+  "scope": "Allow confirmed adopted unified Codex sandboxes to follow Sandy native CLI build updates, retaining canonical conversation and protected policy. Report startup selection waits and relay holds.",
+  "note": "Deployment release-line fix in proofpoint/amap-deploy-sandy#116; existing published releases and tags remain unchanged.",
+  "activation": "Opt-in only: `amap-sandy.py install --codex-mode unified`. Without it, hosts keep separate mode. Installing this release never migrates or erases existing Codex state.",
+  "repositories": [
+    {
+      "name": "amap-connector-claude",
+      "path": "amap-connector-claude",
+      "remote_url": "https://github.com/proofpoint/amap-connector-claude.git",
+      "commit": "3a20c28080ad560a55e202ea59596c1ae1733661",
+      "commit_date": "2026-10-06T22:21:33-06:00",
+      "commit_subject": "read_message shows the runtime's provenance label",
+      "tag": "amap-2026-10-30.1",
+      "tag_object": "01a1c77bb61194f9620e1a71aee327ea6978a294",
+      "change": "unchanged",
+      "previous_commit": "3a20c28080ad560a55e202ea59596c1ae1733661"
+    },
+    {
+      "name": "amap-connector-codex",
+      "path": "amap-connector-codex",
+      "remote_url": "https://github.com/proofpoint/amap-connector-codex",
+      "commit": "197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9",
+      "commit_date": "2026-10-26T18:52:57-06:00",
+      "commit_subject": "Normalize redundant native resume reasoning settings against managed configuration",
+      "tag": "amap-2026-10-30.1",
+      "tag_object": "1012bb33aa1a1f92f34a072cd8346ed77e95dac4",
+      "change": "unchanged",
+      "previous_commit": "197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9"
+    },
+    {
+      "name": "amap-deploy-sandy",
+      "path": "amap-deploy-sandy",
+      "remote_url": "https://github.com/proofpoint/amap-deploy-sandy.git",
+      "commit": "e2c8648d4b250b4241a31c0dab9ea1322bab660b",
+      "commit_date": "2026-10-30T15:27:15-06:00",
+      "commit_subject": "Follow Sandy Codex build updates for confirmed adoptions (#116)",
+      "tag": "amap-2026-10-30.1",
+      "tag_object": "05a8263342a8c7e439817f94394832ed4b98baf5",
+      "change": "updated",
+      "previous_commit": "d91258c331753c553be05a94c8e818de4ab8ec6b"
+    },
+    {
+      "name": "amap-router-local",
+      "path": "amap-router-local",
+      "remote_url": "https://github.com/proofpoint/amap-router-local.git",
+      "commit": "972cb7096bf4110811cbafc20a6a8019d7408576",
+      "commit_date": "2026-10-06T22:09:51-06:00",
+      "commit_subject": "Configure explicit connector outcome directories (#1)",
+      "tag": "amap-2026-10-30.1",
+      "tag_object": "e9c4d54a3b19281d3f464189a86214203b348e1e",
+      "change": "unchanged",
+      "previous_commit": "972cb7096bf4110811cbafc20a6a8019d7408576"
+    }
+  ],
+  "validation": {
+    "sibling_pins_agree": true,
+    "ci": {
+      "amap-deploy-sandy": {
+        "pull_request": "https://github.com/proofpoint/amap-deploy-sandy/pull/116",
+        "note": "All jobs passed on the tested PR head; the pinned squash merge has the identical Git tree.",
+        "runs": [
+          "https://github.com/proofpoint/amap-deploy-sandy/actions/runs/41130873856"
+        ],
+        "jobs": {
+          "suite (3.9)": "success",
+          "suite (3.13)": "success",
+          "canary (siblings' main)": "success"
+        },
+        "tested_head": "316d6e25340a027c175a533fb25d0789f0012f1d",
+        "tested_tree": "8ae412ad2b4105a71a13debf716eaddd89694cbe"
+      },
+      "amap-connector-codex": {
+        "runs": [
+          "https://github.com/proofpoint/amap-connector-codex/actions/runs/40813350825"
+        ],
+        "jobs": {
+          "pytest (3.11)": "success",
+          "pytest (3.13)": "success",
+          "host-ownership": "success"
+        },
+        "note": "All jobs passed on exact pinned commit 197ed8bbcd6cecfee06ccf101c463e2e0c0e34d9."
+      },
+      "amap-connector-claude": {
+        "runs": [
+          "https://github.com/proofpoint/amap-connector-claude/actions/runs/37571077697"
+        ],
+        "jobs": {
+          "suite (python 3.9-3.13)": "success",
+          "pip install .": "success"
+        }
+      },
+      "amap-router-local": {
+        "runs": [
+          "https://github.com/proofpoint/amap-router-local/actions/runs/39136973647"
+        ],
+        "jobs": {
+          "suite (3.9)": "success",
+          "suite (3.13)": "success"
+        }
+      }
+    },
+    "local_rerun": {
+      "platform": "macOS, Python 3.12; no Docker, Sandy container, or native agent invocation",
+      "amap-deploy-sandy": "Transition, unified-status, settings, interactive, connector, fleet and documentation suites passed, including successive build changes and native confirmation/ownership/configuration mutation controls."
+    },
+    "release_contract": "Check exact component pins, execute the shipped mixed-agent launcher, import host adoption modules in isolation, and run the pinned transition/adoption/revalidation/inventory suites on Python 3.11+. Published annotated tags require the separate promotion check."
+  },
+  "evidence": {
+    "mixed_native_pane": "The shipped launcher is executed with synthetic native argv in both mixed-agent orders and with an additional agent. Invalid fleet modes and retained unified ownership must refuse. No inference, credentials, native conversations, or runtime delivery are involved.",
+    "existing_unified_behavior": {
+      "scope_note": "Synthetic native evidence: real Codex 0.164.0 with disposable homes and deterministic localhost inference; no user credentials, external inference or fleet traffic. It does not establish target-host acceptance.",
+      "fresh_unified_startup": [
+        "amap-deploy-sandy PR #106 (four concurrent human/queued-message pairs incl. queued-before-birth completion) https://github.com/proofpoint/amap-deploy-sandy/pull/106",
+        "amap-deploy-sandy PR #108 (fresh startup against the installed payload)"
+      ],
+      "canonical_thread_retained_across_restart": [
+        "amap-deploy-sandy PR #106 (same-canonical restart)",
+        "amap-connector-codex compatibility/unified-runtime-0.164.0.json (exact history across restart, pending work across SIGKILL)",
+        "amap-connector-codex compatibility/unified-protocol-0.164.0.json (exact_ordered_history_retained)"
+      ],
+      "incoming_work_queued_during_human_activity": [
+        "amap-connector-codex compatibility/unified-protocol-0.164.0.json (native_human_busy_state_visible, human_turn_observed_by_controller)",
+        "amap-connector-codex compatibility/native-queue-0.164.0.json (queued work waits for the active human turn)",
+        "amap-deploy-sandy PR #106 (active pause with human/queued pairs)"
+      ],
+      "detached_delivery": [
+        "amap-connector-codex compatibility/unified-runtime-0.164.0.json (detached mail; docs/UNIFIED_RUNTIME.md#verification)",
+        "amap-connector-codex compatibility/native-queue-0.164.0.json (work executes after terminal detachment; reattachment shows the response)"
+      ],
+      "no_replay_after_restart": [
+        "amap-deploy-sandy PR #106 (no replay)",
+        "amap-connector-codex compatibility/unified-protocol-0.164.0.json (reattach_same_history_without_replay)",
+        "amap-connector-codex tests: test_journal.py::test_durable_acceptance_no_replay, test_supervisor.py::test_finished_notice_is_never_replayed_after_scan_and_restart, test_native_queue.py::test_native_human_pending_is_not_automatically_replayed_when_duplicated"
+      ]
+    },
+    "adoption_scope": "Explicit operator adoption preserves retained history and journal. Startup and host verification share the native adoption rule. Legacy records need explicit confirmation to derive previous_fingerprint from the retained controller. No automatic migration, recreation, history deletion, or namespace transfer.",
+    "build_update": "A synthetic installed-build measurement drives the actual adapter refresh. The immutable adoption receipt, previous controller, canonical thread and protected binding are retained. Actual Journal startup audits the changed version; the shipped status producer and host verifier must agree on the refreshed build. Live native protocol compatibility still requires target-host readiness."
+  }
+}

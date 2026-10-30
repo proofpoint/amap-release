@@ -117,7 +117,7 @@ def main():
     parser.add_argument("--require-published-tags", action="store_true")
     args = parser.parse_args()
     args.components_dir = args.components_dir.resolve()
-    match = re.search(r"^LATEST_RELEASE=(amap-[0-9]{4}-[0-9]{2}-[0-9]{2})$", (ROOT / "install.sh").read_text(), re.M)
+    match = re.search(r"^LATEST_RELEASE=(amap-[0-9]{4}-[0-9]{2}-[0-9]{2}(?:\.[1-9][0-9]*)?)$", (ROOT / "install.sh").read_text(), re.M)
     if match is None:
         raise ValueError("installer's latest release is unknown")
     label = match.group(1)
